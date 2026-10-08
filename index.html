@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Музыкальный плеер</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            background: #111;
+
+            font-family: Arial, sans-serif;
+
+            color: white;
+
+        }
+
+
+        /* =================================
+           ОСНОВНОЙ КОНТЕЙНЕР
+        ================================= */
+
+        .container {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 60px;
+
+            width: 900px;
+
+            max-width: 95%;
+
+        }
+
+
+
+        /* =================================
+           ПЛАСТИНКА
+        ================================= */
+
+        .vinyl {
+
+            width: 330px;
+
+            height: 330px;
+
+            border-radius: 50%;
+
+            overflow: hidden;
+
+            flex-shrink: 0;
+
+            animation:
+                spin 5s linear infinite;
+
+            animation-play-state: paused;
+
+        }
+
+
+        /* Картинка внутри пластинки */
+
+        .vinyl img {
+
+            width: 100%;
+
+            height: 100%;
+
+            object-fit: contain;
+
+            display: block;
+
+        }
+
+
+        /* Вращение */
+
+        @keyframes spin {
+
+            from {
+
+                transform:
+                    rotate(0deg);
+
+            }
+
+            to {
+
+                transform:
+                    rotate(360deg);
+
+            }
+
+        }
+
+
+
+        /* =================================
+           ПЛЕЕР
+        ================================= */
+
+        .player {
+
+            width: 400px;
+
+            padding: 30px;
+
+            background: #1e1e1e;
+
+            border-radius: 20px;
+
+            text-align: center;
+
+            box-shadow:
+                0 0 30px
+                rgba(0,0,0,0.5);
+
+        }
+
+
+        h1 {
+
+            margin-top: 0;
+
+        }
+
+
+        #trackName {
+
+            margin: 20px 0;
+
+            color: #aaa;
+
+            min-height: 22px;
+
+        }
+
+
+        .buttons {
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            gap: 8px;
+
+            flex-wrap: wrap;
+
+        }
+
+
+        button {
+
+            border: none;
+
+            border-radius: 10px;
+
+            padding: 12px 16px;
+
+            font-size: 16px;
+
+            cursor: pointer;
+
+            color: white;
+
+            background: #333;
+
+            transition: 0.2s;
+
+        }
+
+
+        button:hover {
+
+            transform: scale(1.05);
+
+            background: #444;
+
+        }
+
+
+        #playBtn {
+
+            background: #4caf50;
+
+        }
+
+
+        #restartBtn {
+
+            background: #673ab7;
+
+        }
+
+
+
+        /* =================================
+           ТЕЛЕФОН
+        ================================= */
+
+        @media (max-width: 800px) {
+
+            .container {
+
+                flex-direction: column;
+
+                gap: 30px;
+
+            }
+
+
+            .vinyl {
+
+                width: 260px;
+
+                height: 260px;
+
+            }
+
+
+            .player {
+
+                width: 100%;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+
+<div class="container">
+
+
+    <!-- =================================
+         ПЛАСТИНКА
+    ================================= -->
+
+    <div class="vinyl" id="vinyl">
+
+        <img
+            src="burmalda.png"
+            alt="Обложка"
+        >
+
+    </div>
+
+
+
+    <!-- =================================
+         ПЛЕЕР
+    ================================= -->
+
+    <div class="player">
+
+        <h1>
+            🎵 Музыкальный плеер
+        </h1>
+
+
+        <div id="trackName">
+
+            Нажми «Играть»
+
+        </div>
+
+
+        <div class="buttons">
+
+
+            <button id="prevBtn">
+
+                ⏮
+
+            </button><button id="playBtn">
+
+                ▶ Играть
+
+            </button>
+
+
+            <button id="nextBtn">
+
+                ⏭
+
+            </button>
+
+
+            <button id="restartBtn">
+
+                🔄 Начать заново
+
+            </button>
+
+
+        </div>
+
+
+        <audio id="audio"></audio>
+
+    </div>
+
+
+</div>
+
+
+
+<script>
+
+
+// ==========================================
+// КОЛИЧЕСТВО ТРЕКОВ
+// ==========================================
+
+const TRACK_COUNT = 105;
+
+
+
+// ==========================================
+// СОЗДАЁМ ТРЕКИ
+// ==========================================
+
+const tracks = [];
+
+const trackNames = [];
+
+
+for (
+    let i = 1;
+    i <= TRACK_COUNT;
+    i++
+) {
+
+    tracks.push(
+        "music/track" + i + ".mp3"
+    );
+
+
+    trackNames.push(
+        "Трек " + i
+    );
+
+}
+
+
+
+// ==========================================
+// ЭЛЕМЕНТЫ
+// ==========================================
+
+const audio =
+    document.getElementById("audio");
+
+
+const playBtn =
+    document.getElementById("playBtn");
+
+
+const nextBtn =
+    document.getElementById("nextBtn");
+
+
+const prevBtn =
+    document.getElementById("prevBtn");
+
+
+const restartBtn =
+    document.getElementById("restartBtn");
+
+
+const trackName =
+    document.getElementById("trackName");
+
+
+const vinyl =
+    document.getElementById("vinyl");
+
+
+
+// ==========================================
+// ПЕРЕМЕННЫЕ
+// ==========================================
+
+let playlist = [];
+
+let currentPosition = 0;
+
+let playing = false;
+
+
+
+// ==========================================
+// ВКЛЮЧИТЬ ВРАЩЕНИЕ
+// ==========================================
+
+function startVinyl() {
+
+    vinyl.style.animationPlayState =
+        "running";
+
+}
+
+
+
+// ==========================================
+// ОСТАНОВИТЬ ВРАЩЕНИЕ
+// ==========================================
+
+function stopVinyl() {
+
+    vinyl.style.animationPlayState =
+        "paused";
+
+}
+
+
+
+// ==========================================
+// СОЗДАТЬ НОВЫЙ ПОРЯДОК
+// ==========================================
+
+function createPlaylist() {
+
+    playlist = [];
+
+
+    for (
+        let i = 0;
+        i < tracks.length;
+        i++
+    ) {
+
+        playlist.push(i);
+
+    }
+
+
+    // Перемешивание
+
+    for (
+        let i = playlist.length - 1;
+        i > 0;
+        i--
+    ) {
+
+        const random =
+            Math.floor(
+                Math.random() * (i + 1)
+            );
+
+
+        [
+            playlist[i],
+            playlist[random]
+        ] =
+        [
+            playlist[random],
+            playlist[i]
+        ];
+
+    }
+
+
+    currentPosition = 0;
+
+
+    console.log(
+        "Новый порядок:",
+        playlist.map(
+            i => trackNames[i]
+        )
+    );
+
+}
+
+
+
+// ==========================================
+// ЗАПУСК ТРЕКА
+// ==========================================
+
+function playTrack() {
+
+    const trackIndex =
+        playlist[currentPosition];
+
+
+    audio.src =
+        tracks[trackIndex];
+
+
+    trackName.textContent =
+        "Сейчас играет: " +
+        trackNames[trackIndex];
+
+
+    audio.play();
+
+
+    playing = true;
+
+
+    playBtn.textContent =
+        "⏸ Пауза";
+
+
+    // Запускаем пластинку
+
+    startVinyl();
+
+}
+
+
+
+// ==========================================
+// ИГРАТЬ / ПАУЗА
+// ==========================================
+
+playBtn.addEventListener(
+    "click",
+    function() {
+
+
+        // Первый запуск
+
+        if (playlist.length === 0) {
+
+            createPlaylist();
+
+            playTrack();
+
+            return;
+
+        }
+
+
+        // Пауза
+
+        if (playing) {
+
+            audio.pause();
+
+            playing = false;
+
+
+            playBtn.textContent =
+                "▶ Продолжить";
+
+
+            // Останавливаем пластинку
+
+            stopVinyl();
+
+        }
+
+
+        // Продолжение
+
+        else {
+
+            audio.play();
+
+            playing = true;
+
+
+            playBtn.textContent =
+                "⏸ Пауза";
+
+
+            // Продолжаем вращение
+
+            startVinyl();
+
+        }
+
+    }
+);
+
+
+
+// ==========================================
+// СЛЕДУЮЩИЙ ТРЕК// ==========================================
+
+nextBtn.addEventListener(
+    "click",
+    function() {
+
+
+        if (
+            currentPosition >=
+            playlist.length - 1
+        ) {
+
+            audio.pause();
+
+            playing = false;
+
+            stopVinyl();
+
+
+            playBtn.textContent =
+                "▶ Играть";
+
+
+            trackName.textContent =
+                "Все 105 треков закончились";
+
+
+            return;
+
+        }
+
+
+        currentPosition++;
+
+
+        playTrack();
+
+    }
+);
+
+
+
+// ==========================================
+// ПРЕДЫДУЩИЙ ТРЕК
+// ==========================================
+
+prevBtn.addEventListener(
+    "click",
+    function() {
+
+
+        if (currentPosition > 0) {
+
+            currentPosition--;
+
+            playTrack();
+
+        }
+
+    }
+);
+
+
+
+// ==========================================
+// НАЧАТЬ ЗАНОВО
+// ==========================================
+
+restartBtn.addEventListener(
+    "click",
+    function() {
+
+
+        createPlaylist();
+
+
+        playTrack();
+
+    }
+);
+
+
+
+// ==========================================
+// ТРЕК ЗАКОНЧИЛСЯ
+// ==========================================
+
+audio.addEventListener(
+    "ended",
+    function() {
+
+
+        currentPosition++;
+
+
+        // Если закончились все 105
+
+        if (
+            currentPosition >=
+            playlist.length
+        ) {
+
+            audio.pause();
+
+            playing = false;
+
+
+            // Останавливаем пластинку
+
+            stopVinyl();
+
+
+            playBtn.textContent =
+                "▶ Играть";
+
+
+            trackName.textContent =
+                "Все 105 треков закончились";
+
+
+            return;
+
+        }
+
+
+        // Следующий трек
+
+        playTrack();
+
+    }
+);
+
+
+</script>
+
+
+</body>
+
+</html>
